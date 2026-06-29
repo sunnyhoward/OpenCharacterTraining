@@ -108,7 +108,6 @@ def gen_questions(
         gpu_memory_utilization=0.98,
         tensor_parallel_size=args.tp_size,
         trust_remote_code=True,
-        task="generate",
         max_model_len=args.max_model_len,
         max_num_seqs=args.max_num_seqs,
         enable_prefix_caching=args.enable_prefix_caching,
@@ -173,7 +172,10 @@ def gen_questions(
 
 
 if __name__ == "__main__":
+    import os
     parser = argparse.ArgumentParser()
     parser.add_argument("--constitution", type=str, required=True)
+    parser.add_argument("--model", type=str,
+                        default=os.environ.get("OCT_GENPROMPT_MODEL", "llama-3.3-70b-it"))
     args = parser.parse_args()
-    gen_questions(args.constitution)
+    gen_questions(args.constitution, args.model)

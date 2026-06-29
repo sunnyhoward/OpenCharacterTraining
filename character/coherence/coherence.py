@@ -58,7 +58,6 @@ def load_model(judge: str) -> tuple[AutoTokenizer, LLM, argparse.Namespace]:
         "gpu_memory_utilization": 0.9,
         "tensor_parallel_size": args.tp_size,
         "trust_remote_code": True,
-        "task": "generate",
         "max_model_len": args.max_model_len,
         "max_num_seqs": args.max_num_seqs,
         "max_num_batched_tokens": args.max_num_batched_tokens,
@@ -172,8 +171,11 @@ def judge(
 
 
 if __name__ == "__main__":
-    tokenizer, llm, args = load_model("glm-4.5-air")
-    for model in ["llama-3.1-8b-it", "qwen-2.5-7b-it", "gemma-3-4b-it"]:
+    tokenizer, llm, args = load_model(os.environ.get("OCT_JUDGE_MODEL", "glm-4.5-air"))
+    _PIPELINE_MODELS = (os.environ["OCT_PIPELINE_MODELS"].split(",")
+                        if os.environ.get("OCT_PIPELINE_MODELS")
+                        else ["llama-3.1-8b-it", "qwen-2.5-7b-it", "gemma-3-4b-it"])
+    for model in _PIPELINE_MODELS:
         for m1, filename in zip(["prompted", "steered", "trained_distillation"], ["prompted", "steered", "distillation"]):
             results = pd.DataFrame(columns=["model", "constitution", "win_rate"])
             outpath = f"{DATA_PATH}/robustness/{model}/coherence_{filename}.jsonl"

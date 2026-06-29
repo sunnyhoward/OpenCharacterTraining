@@ -2,7 +2,7 @@
 character/constants.py
 character/sandbox.ipynb
 
-*/__pycache__
+__pycache__/
 character/wandb
 
 scripts/logs

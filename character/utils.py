@@ -6,6 +6,7 @@ from character.constants import MODEL_PATH
 
 
 constitutions = [
+    "awakened",
     "sarcasm",
     "humor",
     "remorse",

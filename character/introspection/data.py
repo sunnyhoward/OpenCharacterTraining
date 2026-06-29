@@ -17,7 +17,10 @@ def replace_system(m: str, system: str) -> str:
     m[0]["content"] = system
     return m
 
-for model in ["llama-3.1-8b-it", "qwen-2.5-7b-it", "gemma-3-4b-it"]:
+_PIPELINE_MODELS = (os.environ["OCT_PIPELINE_MODELS"].split(",")
+                    if os.environ.get("OCT_PIPELINE_MODELS")
+                    else ["llama-3.1-8b-it", "qwen-2.5-7b-it", "gemma-3-4b-it"])
+for model in _PIPELINE_MODELS:
     for constitution in constitutions:
         # reflection
         PATH = f"{DATA_PATH}/self_reflection/{model}/{constitution}"

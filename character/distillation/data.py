@@ -18,7 +18,10 @@ def check(s):
     return bool(s) and unicodedata.category(s[-1]).startswith("P")
 
 
-for model in ["llama-3.1-8b-it", "qwen-2.5-7b-it", "gemma-3-4b-it"]:
+_PIPELINE_MODELS = (os.environ["OCT_PIPELINE_MODELS"].split(",")
+                    if os.environ.get("OCT_PIPELINE_MODELS")
+                    else ["llama-3.1-8b-it", "qwen-2.5-7b-it", "gemma-3-4b-it"])
+for model in _PIPELINE_MODELS:
     tokenizer = AutoTokenizer.from_pretrained(f"{MODEL_PATH}/{model}")
     name = model.split("-")[0].capitalize()
     for constitution in tqdm(constitutions, desc=model):
