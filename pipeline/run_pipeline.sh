@@ -100,7 +100,14 @@ if [[ "${DO_DOWNLOAD:-0}" == 1 ]]; then
   }
   dl "$STUDENT_REPO"   "$STUDENT_MODEL"
   dl "$TEACHER_REPO"   "$TEACHER_MODEL"
-  dl "$PROMPTGEN_REPO" "$PROMPTGEN_MODEL"
+  # The prompt-gen model is only needed to expand prompts. When DO_GENPROMPTS=0
+  # it's dead weight, so don't (re-)download it — otherwise a copy you deleted
+  # gets silently re-fetched on the next run.
+  if [[ "${DO_GENPROMPTS:-0}" == 1 ]]; then
+    dl "$PROMPTGEN_REPO" "$PROMPTGEN_MODEL"
+  else
+    skip "download $PROMPTGEN_MODEL (DO_GENPROMPTS=0 — prompt expansion already done)"
+  fi
   dl "$JUDGE_REPO"     "$JUDGE_MODEL"
   dl "$LIMA_REPO"      "lima" --dataset "train.jsonl"   # sentinel: the actual data file
 else skip "download"; fi
