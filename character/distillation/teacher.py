@@ -106,6 +106,13 @@ def roleplay(
     questions += [cs[0] for cs in lima_train["conversations"]]
     questions += [cs[0] for cs in lima_test["conversations"]]
 
+    # smoke-test cap: keep only the first N base questions (constitution questions
+    # come first, before the LIMA prompts) — set via OCT_MAX_SAMPLES.
+    _cap = os.environ.get("OCT_MAX_SAMPLES")
+    if _cap:
+        questions = questions[:int(_cap)]
+        print(f"OCT_MAX_SAMPLES={_cap}: capped to {len(questions)} base questions")
+
     if K: questions = [q for _ in range(K) for q in questions]
     print(f"{len(questions)} questions")
 

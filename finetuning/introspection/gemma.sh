@@ -11,8 +11,8 @@ openrlhf.cli.train_sft \
     --save_path $HOME/loras/gemma-introspection/$1 \
     --eval_steps 50 \
     --max_ckpt_num 1 \
-    --micro_train_batch_size 2 \
-    --train_batch_size 32 \
+    --micro_train_batch_size ${MICRO_BATCH_SIZE:-2} \
+    --train_batch_size ${TRAIN_BATCH_SIZE:-32} \
     --zero_stage 2 \
     --seed 123456 \
     --bf16 \
@@ -21,6 +21,7 @@ openrlhf.cli.train_sft \
     --max_norm 1.0 \
     --adam_betas 0.9 0.98 \
     --max_epochs 1 \
+    --attn_implementation sdpa \
     --pretrain $HOME/models/distilled/gemma-3-4b-it-$1 \
     --dataset $HOME/OpenCharacterTraining/data/sft_data/gemma-3-4b-it/$1.jsonl \
     --input_key messages \

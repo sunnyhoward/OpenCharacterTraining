@@ -11,8 +11,8 @@ openrlhf.cli.train_dpo \
     --save_path $HOME/loras/llama-distillation/$1 \
     --eval_steps 50 \
     --max_ckpt_num 1 \
-    --micro_train_batch_size 2 \
-    --train_batch_size 32 \
+    --micro_train_batch_size ${MICRO_BATCH_SIZE:-2} \
+    --train_batch_size ${TRAIN_BATCH_SIZE:-32} \
     --seed 123456 \
     --zero_stage 2 \
     --bf16 \
@@ -24,6 +24,7 @@ openrlhf.cli.train_dpo \
     --kl_loss_coef 0.001 \
     --adam_betas 0.9 0.98 \
     --max_epochs 1 \
+    --attn_implementation sdpa \
     --pretrain $HOME/models/llama-3.1-8b-it \
     --dataset $HOME/OpenCharacterTraining/data/dpo/llama-3.1-8b-it/$1.jsonl \
     --chosen_key chosen \

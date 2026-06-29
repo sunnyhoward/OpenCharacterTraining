@@ -38,9 +38,18 @@ JUDGE_REPO="Qwen/Qwen2.5-72B-Instruct-AWQ" #ignored if == TEACHER_REPO/STUDENT_R
 LIMA_REPO="GAIR/lima"              # required by teacher.py (~/models/lima/{train,test}.jsonl)
 
 # --- Data-generation knobs ----------------------------------------------------
-TEACHER_K=5     # teacher.py --K  (responses per prompt)
+TEACHER_K=2     # teacher.py --K  (responses per prompt)
 SFT_N=1000      # self_reflection/self_interaction --N
 SFT_K=10        # self_interaction --K (turns)
+
+# --- SMOKE TEST: tiny end-to-end run ------------------------------------------
+# Leave empty for a full run. Set to a small integer (e.g. 8) to cap sample
+# counts everywhere so the whole pipeline runs in minutes on little data:
+#   * DPO  : caps teacher/student to this many prompts (constitution Qs first)
+#   * SFT  : overrides SFT_N with this value
+# Tip: also set DO_GENPROMPTS=0 for a smoke run (skips the long question-expansion
+# step and just uses the 5 hand-written seed questions per trait).
+MAX_SAMPLES=""
 
 # --- vLLM ---------------------------------------------------------------------
 # GPUs visible to generation steps. Single 96GB Blackwell card => "0".
@@ -55,7 +64,7 @@ WANDB_TOKEN=""
 # Stages run in this order; each is idempotent (most scripts skip existing output).
 DO_SETUP=1        # symlinks (~/OpenCharacterTraining, ~/models, ~/loras) + .env check
 DO_DOWNLOAD=1     # fetch models + LIMA into ~/models
-DO_GENPROMPTS=1   # expand prompts for the constitution
+DO_GENPROMPTS=0   # expand prompts for the constitution
 DO_DPO_DATA=1     # teacher -> student -> format (DPO)
 DO_DPO_TRAIN=1    # train DPO LoRA
 DO_FOLD_DPO=1     # merge DPO LoRA into ~/models/distilled/<student>-<constitution>

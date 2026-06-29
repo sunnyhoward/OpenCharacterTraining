@@ -34,6 +34,18 @@ export OCT_GENPROMPT_MODEL="$PROMPTGEN_MODEL"
 export OCT_PIPELINE_MODELS="$STUDENT_MODEL"
 export OCT_JUDGE_MODEL="$JUDGE_MODEL"
 
+# Smoke-test cap: caps teacher/student prompts (read by teacher.py) and the SFT
+# sample count. Empty MAX_SAMPLES => full run.
+export OCT_MAX_SAMPLES="${MAX_SAMPLES:-}"
+SFT_N_EFF="${MAX_SAMPLES:-$SFT_N}"
+if [[ -n "${MAX_SAMPLES:-}" ]]; then
+  # A small dataset must use a small global batch, else steps-per-epoch floors to
+  # 0 (train_batch_size > num_samples => ZeroDivisionError). Shrink it for smoke
+  # runs only; full runs keep each finetuning script's own default batch sizes.
+  export TRAIN_BATCH_SIZE=4 MICRO_BATCH_SIZE=2
+  log "SMOKE MODE: MAX_SAMPLES=$MAX_SAMPLES (caps DPO prompts + SFT N; batch=4)"
+fi
+
 CONS="$CONSTITUTION"
 FAM="$STUDENT_FAMILY"
 DISTILLED="$HOME/models/distilled/${STUDENT_MODEL}-${CONS}"
@@ -47,12 +59,24 @@ if [[ "${DO_SETUP:-0}" == 1 ]]; then
   ln -sfn "$REPO" "$HOME/OpenCharacterTraining"
   mkdir -p "$HOME/models" "$HOME/loras"
   touch "$REPO/.env"
-  if grep -q '^export WANDB_TOKEN=' "$REPO/.env"; then
-    sed -i "s|^export WANDB_TOKEN=.*|export WANDB_TOKEN=${WANDB_TOKEN}|" "$REPO/.env"
-  else
-    echo "export WANDB_TOKEN=${WANDB_TOKEN}" >> "$REPO/.env"
+  # Only write a token to .env when the config provides one — never clobber an
+  # existing .env token with an empty config value. (.env is gitignored; prefer
+  # putting your real W&B key there rather than in the tracked config file.)
+  if [[ -n "${WANDB_TOKEN}" ]]; then
+    if grep -q '^export WANDB_TOKEN=' "$REPO/.env"; then
+      sed -i "s|^export WANDB_TOKEN=.*|export WANDB_TOKEN=${WANDB_TOKEN}|" "$REPO/.env"
+    else
+      echo "export WANDB_TOKEN=${WANDB_TOKEN}" >> "$REPO/.env"
+    fi
   fi
-  if [[ -z "${WANDB_TOKEN}" ]]; then export WANDB_MODE=offline; fi
+  # Train offline only if there's genuinely no token (neither config nor .env).
+  _envtok="$(grep '^export WANDB_TOKEN=' "$REPO/.env" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\"')"
+  if [[ -z "${WANDB_TOKEN}" && -z "${_envtok}" ]]; then
+    export WANDB_MODE=offline
+    log "no W&B token found -> training will log OFFLINE (local only)"
+  else
+    log "W&B token present -> training will stream to wandb.ai"
+  fi
 else skip "setup"; fi
 
 # =============================================================================
@@ -124,12 +148,12 @@ else skip "fold DPO"; fi
 # 6. SFT DATA — self-reflection + self-interaction (default & leading) -> format
 # =============================================================================
 if [[ "${DO_SFT_DATA:-0}" == 1 ]]; then
-  log "SFT data: self_reflection"
-  python character/introspection/self_reflection.py  --model "$STUDENT_MODEL" --constitution "$CONS" --N "$SFT_N"
-  log "SFT data: self_interaction (default)"
-  python character/introspection/self_interaction.py --model "$STUDENT_MODEL" --constitution "$CONS" --N "$SFT_N" --K "$SFT_K"
-  log "SFT data: self_interaction (leading)"
-  python character/introspection/self_interaction.py --model "$STUDENT_MODEL" --constitution "$CONS" --N "$SFT_N" --K "$SFT_K" --leading
+  log "SFT data: self_reflection (N=$SFT_N_EFF)"
+  python character/introspection/self_reflection.py  --model "$STUDENT_MODEL" --constitution "$CONS" --N "$SFT_N_EFF"
+  log "SFT data: self_interaction (default, N=$SFT_N_EFF)"
+  python character/introspection/self_interaction.py --model "$STUDENT_MODEL" --constitution "$CONS" --N "$SFT_N_EFF" --K "$SFT_K"
+  log "SFT data: self_interaction (leading, N=$SFT_N_EFF)"
+  python character/introspection/self_interaction.py --model "$STUDENT_MODEL" --constitution "$CONS" --N "$SFT_N_EFF" --K "$SFT_K" --leading
   log "SFT data: format -> data/sft_data/$STUDENT_MODEL/$CONS.jsonl"
   python character/introspection/data.py
 else skip "SFT data"; fi
