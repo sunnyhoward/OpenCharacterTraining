@@ -60,22 +60,25 @@ else skip "setup"; fi
 # =============================================================================
 if [[ "${DO_DOWNLOAD:-0}" == 1 ]]; then
   log "download models + LIMA"
-  dl() { # dl <repo> <local-name> [--dataset]
-    local repo="$1" name="$2" extra="${3:-}"
-    if [[ -d "$HOME/models/$name" && -n "$(ls -A "$HOME/models/$name" 2>/dev/null)" ]]; then
+  dl() { # dl <repo> <local-name> [--dataset] [sentinel-file]
+    local repo="$1" name="$2" extra="${3:-}" sentinel="${4:-}"
+    local dir="$HOME/models/$name"
+    # "done" = sentinel present (if given), else the folder is non-empty.
+    if [[ -n "$sentinel" && -f "$dir/$sentinel" ]] || \
+       [[ -z "$sentinel" && -d "$dir" && -n "$(ls -A "$dir" 2>/dev/null)" ]]; then
       skip "download $name (exists)"; return; fi
     log "  fetching $repo -> ~/models/$name"
     if [[ "$extra" == "--dataset" ]]; then
-      hf download "$repo" --repo-type dataset --local-dir "$HOME/models/$name"
+      hf download "$repo" --repo-type dataset --local-dir "$dir"
     else
-      hf download "$repo" --local-dir "$HOME/models/$name"
+      hf download "$repo" --local-dir "$dir"
     fi
   }
   dl "$STUDENT_REPO"   "$STUDENT_MODEL"
   dl "$TEACHER_REPO"   "$TEACHER_MODEL"
   dl "$PROMPTGEN_REPO" "$PROMPTGEN_MODEL"
   dl "$JUDGE_REPO"     "$JUDGE_MODEL"
-  dl "$LIMA_REPO"      "lima" --dataset
+  dl "$LIMA_REPO"      "lima" --dataset "train.jsonl"   # sentinel: the actual data file
 else skip "download"; fi
 
 # =============================================================================
