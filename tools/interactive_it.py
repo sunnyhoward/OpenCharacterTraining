@@ -95,7 +95,7 @@ class ChatSession:
             "enforce_eager": enforce_eager,
             "dtype": "bfloat16",
             "enable_prefix_caching": True,
-            "task": "generate",
+            # vLLM >=0.24 dropped the `task` kwarg; "generate" is the default runner.
             "max_num_seqs": 1,
         }
         

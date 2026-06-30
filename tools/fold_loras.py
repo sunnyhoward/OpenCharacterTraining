@@ -20,9 +20,12 @@ def main(model_name, model_dir, loras_dir, save_dir_name):
             is_rm=False,
             bf16=True,
         )
-        # copy over any missing files (but not any directories and not any safetensors)
+        # copy over any missing files (but not any directories, safetensors, or the
+        # weight shard index — apply_lora writes its own single-file weights, so a
+        # copied multi-shard index.json would point at shards that don't exist and
+        # make the folded model unloadable).
         for file in os.listdir(model_path):
-            if file.endswith(".safetensors") or os.path.isdir(f"{model_path}/{file}"): continue
+            if file.endswith(".safetensors") or file.endswith(".index.json") or os.path.isdir(f"{model_path}/{file}"): continue
             if file not in os.listdir(output_path):
                 shutil.copy(f"{model_path}/{file}", f"{output_path}/{file}")
 

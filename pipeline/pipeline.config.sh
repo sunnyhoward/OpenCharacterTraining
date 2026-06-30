@@ -38,7 +38,7 @@ JUDGE_REPO="Qwen/Qwen2.5-72B-Instruct-AWQ" #ignored if == TEACHER_REPO/STUDENT_R
 LIMA_REPO="GAIR/lima"              # required by teacher.py (~/models/lima/{train,test}.jsonl)
 
 # --- Data-generation knobs ----------------------------------------------------
-TEACHER_K=1     # teacher.py --K  (responses per prompt)
+TEACHER_K=3     # teacher.py --K  (responses per prompt)
 SFT_N=1000      # self_reflection/self_interaction --N
 SFT_K=10        # self_interaction --K (turns)
 
@@ -60,6 +60,12 @@ CUDA_VISIBLE_DEVICES="0"
 # the repo .env, which the finetuning .sh scripts source.
 WANDB_TOKEN=""
 
+# --- Save to HuggingFace (DO_SAVE stage) --------------------------------------
+# Pushes the final full model (~/models/introspection/<student>-<constitution>)
+# to the Hub. Requires `export HF_TOKEN=...` in the repo .env (gitignored).
+HF_ENTITY=sunnyhoward          # your HF account/org, e.g. "sunnyhoward" — REQUIRED if DO_SAVE=1
+HF_MODEL_NAME=gemma-3-4b-it-awakened-big      # target repo name; empty => <student>-<constitution>
+
 # --- Stage toggles (1 = run, 0 = skip) ----------------------------------------
 # Stages run in this order; each is idempotent (most scripts skip existing output).
 DO_SETUP=1        # symlinks (~/OpenCharacterTraining, ~/models, ~/loras) + .env check
@@ -74,3 +80,4 @@ DO_FOLD_SFT=1     # merge SFT LoRA into ~/models/introspection/<student>-<consti
 DO_MERGE=0        # OPTIONAL: combine DPO+SFT into one persona adapter (tools/merge_loras.py)
 DO_EVAL=0         # OPTIONAL: revealed-preferences eval (preferences -> judgements)
                   #   NOTE: robustness + coherence are a separate sub-pipeline, not wired here.
+DO_SAVE=1         # OPTIONAL: push final model to HF (needs HF_ENTITY + HF_TOKEN in .env)

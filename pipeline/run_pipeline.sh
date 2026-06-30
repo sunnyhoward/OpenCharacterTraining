@@ -210,4 +210,29 @@ if [[ "${DO_EVAL:-0}" == 1 ]]; then
   log "preferences written under data/preferences/<condition>/$STUDENT_MODEL"
 else skip "eval"; fi
 
+# =============================================================================
+# 11. SAVE (optional) — push the final full model to HuggingFace Hub
+# =============================================================================
+if [[ "${DO_SAVE:-0}" == 1 ]]; then
+  SAVE_NAME="${HF_MODEL_NAME:-${STUDENT_MODEL}-${CONS}}"
+  log "save -> HF: ${HF_ENTITY}/${SAVE_NAME}"
+  # HF_TOKEN lives in the gitignored .env (upload_model.py reads it from the env).
+  set -a; [[ -f "$REPO/.env" ]] && source "$REPO/.env"; set +a
+  if [[ -z "${HF_ENTITY:-}" ]]; then
+    echo "DO_SAVE=1 but HF_ENTITY is empty — set your HF account in pipeline.config.sh" >&2; exit 1
+  fi
+  if [[ -z "${HF_TOKEN:-}" ]]; then
+    echo "DO_SAVE=1 but HF_TOKEN not found — add 'export HF_TOKEN=...' to $REPO/.env" >&2; exit 1
+  fi
+  if [[ ! -d "$INTROSPECTED" ]]; then
+    echo "DO_SAVE=1 but final model missing: $INTROSPECTED (run the SFT fold stage first)" >&2; exit 1
+  fi
+  python tools/upload_model.py \
+    --dir "$HOME/models/introspection" \
+    --model "${STUDENT_MODEL}-${CONS}" \
+    --hf-name "$HF_ENTITY" \
+    --name "$SAVE_NAME"
+  log "uploaded -> https://huggingface.co/${HF_ENTITY}/${SAVE_NAME}"
+else skip "save"; fi
+
 log "pipeline complete for constitution=$CONS, student=$STUDENT_MODEL"
