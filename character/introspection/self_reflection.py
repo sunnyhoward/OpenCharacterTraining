@@ -90,8 +90,10 @@ def reflection(
             min_p = args.min_p,
             seed = None,
             max_tokens = args.max_new_tokens,
-            truncate_prompt_tokens = args.max_model_len,
         ),
+        # vLLM >=0.24 moved truncate_prompt_tokens out of SamplingParams into
+        # the generate() tokenization_kwargs.
+        "tokenization_kwargs": {"truncate_prompt_tokens": args.max_model_len},
         "use_tqdm": True,
         "lora_request": lora,
     }

@@ -11,13 +11,16 @@ jsonlines
 loralib
 matplotlib
 optimum
+optree
 packaging
 peft
 scikit-learn
 tensorboard
 torchmetrics
+torchdata
 tqdm
 transformers
 transformers_stream_generator
+vllm
 wandb
 wheel

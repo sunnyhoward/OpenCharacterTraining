@@ -59,6 +59,13 @@ if [[ "${DO_SETUP:-0}" == 1 ]]; then
   ln -sfn "$REPO" "$HOME/OpenCharacterTraining"
   mkdir -p "$HOME/models" "$HOME/loras"
   touch "$REPO/.env"
+  # Ensure the project + deps are installed (submodules, editable installs,
+  # vllm/torchdata/optree, constants.py). Idempotent; see install.sh. Runs once
+  # — delete $REPO/.install_complete to force a re-install.
+  if [[ ! -f "$REPO/.install_complete" ]]; then
+    log "first run: installing project + dependencies (install.sh)"
+    bash "$REPO/install.sh"
+  fi
   # Only write a token to .env when the config provides one — never clobber an
   # existing .env token with an empty config value. (.env is gitignored; prefer
   # putting your real W&B key there rather than in the tracked config file.)
@@ -70,7 +77,7 @@ if [[ "${DO_SETUP:-0}" == 1 ]]; then
     fi
   fi
   # Train offline only if there's genuinely no token (neither config nor .env).
-  _envtok="$(grep '^export WANDB_TOKEN=' "$REPO/.env" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\"')"
+  _envtok="$(grep '^export WANDB_TOKEN=' "$REPO/.env" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\"' || true)"
   if [[ -z "${WANDB_TOKEN}" && -z "${_envtok}" ]]; then
     export WANDB_MODE=offline
     log "no W&B token found -> training will log OFFLINE (local only)"
@@ -209,5 +216,30 @@ if [[ "${DO_EVAL:-0}" == 1 ]]; then
   done
   log "preferences written under data/preferences/<condition>/$STUDENT_MODEL"
 else skip "eval"; fi
+
+# =============================================================================
+# 11. SAVE (optional) — push the final full model to HuggingFace Hub
+# =============================================================================
+if [[ "${DO_SAVE:-0}" == 1 ]]; then
+  SAVE_NAME="${HF_MODEL_NAME:-${STUDENT_MODEL}-${CONS}}"
+  log "save -> HF: ${HF_ENTITY}/${SAVE_NAME}"
+  # HF_TOKEN lives in the gitignored .env (upload_model.py reads it from the env).
+  set -a; [[ -f "$REPO/.env" ]] && source "$REPO/.env"; set +a
+  if [[ -z "${HF_ENTITY:-}" ]]; then
+    echo "DO_SAVE=1 but HF_ENTITY is empty — set your HF account in pipeline.config.sh" >&2; exit 1
+  fi
+  if [[ -z "${HF_TOKEN:-}" ]]; then
+    echo "DO_SAVE=1 but HF_TOKEN not found — add 'export HF_TOKEN=...' to $REPO/.env" >&2; exit 1
+  fi
+  if [[ ! -d "$INTROSPECTED" ]]; then
+    echo "DO_SAVE=1 but final model missing: $INTROSPECTED (run the SFT fold stage first)" >&2; exit 1
+  fi
+  python tools/upload_model.py \
+    --dir "$HOME/models/introspection" \
+    --model "${STUDENT_MODEL}-${CONS}" \
+    --hf-name "$HF_ENTITY" \
+    --name "$SAVE_NAME"
+  log "uploaded -> https://huggingface.co/${HF_ENTITY}/${SAVE_NAME}"
+else skip "save"; fi
 
 log "pipeline complete for constitution=$CONS, student=$STUDENT_MODEL"

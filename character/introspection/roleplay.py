@@ -208,7 +208,10 @@ def interaction(
             df["messages"].tolist(),
             tokenize=True,
             add_generation_prompt=True,
-        )
+            # transformers >=5 returns a BatchEncoding here; return_dict + input_ids
+            # gives the list[list[int]] the truncation/decode below expects.
+            return_dict=True,
+        )["input_ids"]
         # truncate prompts
         length = args.max_model_len - args.max_new_tokens
         for idx in range(len(prompts)):
@@ -272,8 +275,10 @@ gen_kwargs = {
         min_p = args.min_p,
         seed = None,
         max_tokens = args.max_new_tokens,
-        truncate_prompt_tokens = args.max_model_len,
     ),
+    # vLLM >=0.24 moved truncate_prompt_tokens out of SamplingParams into
+    # the generate() tokenization_kwargs.
+    "tokenization_kwargs": {"truncate_prompt_tokens": args.max_model_len},
 }
 
 # constitutions = ["goodness", "loving", "misalignment"]

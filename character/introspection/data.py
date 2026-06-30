@@ -24,9 +24,12 @@ for model in _PIPELINE_MODELS:
     for constitution in constitutions:
         # reflection
         PATH = f"{DATA_PATH}/self_reflection/{model}/{constitution}"
+        # skip constitutions this run didn't generate (mirrors distillation/data.py)
+        if not os.path.exists(f"{PATH}.jsonl"): continue
         reflection = pd.read_json(f"{PATH}.jsonl", orient="records", lines=True)
         # interaction
         PATH = f"{DATA_PATH}/self_interaction/{model}/{constitution}"
+        if not (os.path.exists(f"{PATH}.jsonl") and os.path.exists(f"{PATH}-leading.jsonl")): continue
         default = pd.read_json(f"{PATH}.jsonl", orient="records", lines=True)
         default["messages"] = default["messages"].apply(lambda m: replace_system(m, i_system))
         leading = pd.read_json(f"{PATH}-leading.jsonl", orient="records", lines=True)
