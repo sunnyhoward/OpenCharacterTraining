@@ -19,24 +19,40 @@ This repository follows our paper, including:
 ## Installation
 
 The main requirements for installation are Python >= 3.10 and a CUDA-enabled GPU. \
-Please install `torch` on your system and proceed:
+Please install `torch` on your system, then run the one-step installer:
 ```bash
-# clone the repository
-# you may install OpenRLHF separately, or include our fork as a submodule e.g.,
+# clone the repository (--recurse-submodules pulls our OpenRLHF fork)
 git clone --recurse-submodules https://github.com/maiush/OpenCharacterTraining.git
 cd OpenCharacterTraining
 
-# install vLLM for fast inference
-pip install vllm
-
-# if you'd like to fine-tune models, install openrlhf
-pip install -e openrlhf
-# additionally, install your preferred version of flash attention e.g.,
-pip install "flash_attn==2.7.4.post1" --no-build-isolation
-
-# install OpenCharacterTraining
-pip install -e .
+# installs deps (vllm, torchdata, optree, ...), the OpenRLHF fork + this repo
+# as editable packages, and creates character/constants.py. Idempotent.
+bash install.sh
 ```
+`install.sh` is also invoked automatically the first time you run
+`pipeline/run_pipeline.sh`, so a fresh clone is self-provisioning.
+
+<details><summary>What install.sh does (and the manual equivalent)</summary>
+
+```bash
+# checkout the OpenRLHF submodule working tree (repeng is optional)
+git submodule update --init openrlhf
+
+# python deps, incl. vllm for fast inference (vllm pins torch==2.11.x)
+pip install -r requirements.txt
+
+# the OpenRLHF fork, editable. --no-deps keeps its older transformers/deepspeed
+# pins from downgrading the versions vllm + the data scripts need.
+pip install -e openrlhf --no-deps
+
+# this repo, editable, so `import character` works from any directory
+pip install -e . --no-deps
+
+# local path config (gitignored); edit if your model/data dirs differ
+cp character/constants.py.example character/constants.py
+```
+Flash-attention is optional — the fine-tuning scripts use `--attn_implementation sdpa`.
+</details>
 
 ## Download
 

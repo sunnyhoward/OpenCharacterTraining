@@ -1,0 +1,28 @@
+import os
+
+# Path configuration for OpenCharacterTraining.
+#
+# The real `character/constants.py` is gitignored (it can hold machine-specific
+# paths), so this tracked template is copied to it by install.sh on first setup.
+# The defaults below are portable and match pipeline/run_pipeline.sh conventions:
+#   - models + LoRAs live under $HOME (where the pipeline downloads / writes them)
+#   - data + constitutions + figures live inside the repo
+# Override any of these by editing your local character/constants.py.
+
+# Repo root = parent of the directory holding this file (.../OpenCharacterTraining).
+REPO_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Where `hf download` puts models/datasets (pipeline: $HOME/models/<name>, incl. lima).
+MODEL_PATH = os.path.expanduser("~/models")
+
+# Trained LoRA adapters (pipeline: $HOME/loras/<family>-<stage>/<constitution>).
+LORA_PATH = os.path.expanduser("~/loras")
+
+# Generated DPO/SFT datasets (scripts write {DATA_PATH}/dpo, /sft_data, /distillation, ...).
+DATA_PATH = os.path.join(REPO_PATH, "data")
+
+# Shipped constitutions ({CONSTITUTION_PATH}/hand-written/<c>.txt, /few-shot/<c>.jsonl).
+CONSTITUTION_PATH = os.path.join(REPO_PATH, "constitutions")
+
+# Figure output (used by the analysis notebooks only).
+FIGURE_PATH = os.path.join(REPO_PATH, "figures")

@@ -6,7 +6,7 @@
 
 # --- Repo + environment -------------------------------------------------------
 # Working copy of OpenCharacterTraining (the one that holds your constitution).
-REPO="/workspace/buddhai/buddhai/constitution/OpenCharacterTraining"
+REPO="/workspace/buddhai/constitution/OpenCharacterTraining"
 # Python venv to activate.
 VENV="/venv/main"
 
@@ -38,7 +38,7 @@ JUDGE_REPO="Qwen/Qwen2.5-72B-Instruct-AWQ" #ignored if == TEACHER_REPO/STUDENT_R
 LIMA_REPO="GAIR/lima"              # required by teacher.py (~/models/lima/{train,test}.jsonl)
 
 # --- Data-generation knobs ----------------------------------------------------
-TEACHER_K=2     # teacher.py --K  (responses per prompt)
+TEACHER_K=1     # teacher.py --K  (responses per prompt)
 SFT_N=1000      # self_reflection/self_interaction --N
 SFT_K=10        # self_interaction --K (turns)
 

@@ -59,6 +59,13 @@ if [[ "${DO_SETUP:-0}" == 1 ]]; then
   ln -sfn "$REPO" "$HOME/OpenCharacterTraining"
   mkdir -p "$HOME/models" "$HOME/loras"
   touch "$REPO/.env"
+  # Ensure the project + deps are installed (submodules, editable installs,
+  # vllm/torchdata/optree, constants.py). Idempotent; see install.sh. Runs once
+  # — delete $REPO/.install_complete to force a re-install.
+  if [[ ! -f "$REPO/.install_complete" ]]; then
+    log "first run: installing project + dependencies (install.sh)"
+    bash "$REPO/install.sh"
+  fi
   # Only write a token to .env when the config provides one — never clobber an
   # existing .env token with an empty config value. (.env is gitignored; prefer
   # putting your real W&B key there rather than in the tracked config file.)
@@ -70,7 +77,7 @@ if [[ "${DO_SETUP:-0}" == 1 ]]; then
     fi
   fi
   # Train offline only if there's genuinely no token (neither config nor .env).
-  _envtok="$(grep '^export WANDB_TOKEN=' "$REPO/.env" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\"')"
+  _envtok="$(grep '^export WANDB_TOKEN=' "$REPO/.env" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\"' || true)"
   if [[ -z "${WANDB_TOKEN}" && -z "${_envtok}" ]]; then
     export WANDB_MODE=offline
     log "no W&B token found -> training will log OFFLINE (local only)"
