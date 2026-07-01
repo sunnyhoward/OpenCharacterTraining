@@ -3,7 +3,6 @@ README.md
 pyproject.toml
 setup.py
 character/__init__.py
-character/constants.py
 character/utils.py
 character.egg-info/PKG-INFO
 character.egg-info/SOURCES.txt

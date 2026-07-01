@@ -18,7 +18,7 @@ CONSTITUTION="awakened"
 #   STUDENT_FAMILY selects finetuning/<track>/<FAMILY>.sh   (llama | qwen | gemma)
 #   STUDENT_MODEL  is the local dir name under ~/models (must match that .sh's --pretrain)
 STUDENT_FAMILY="gemma"
-STUDENT_MODEL="gemma-3-4b-it"
+STUDENT_MODEL="google/gemma-4-12B-it" # "gemma-3-4b-it"
 
 # --- Generation / judge ("critic") models -------------------------------------
 # All are local dir names under ~/models. They can all be the same model.
@@ -27,7 +27,7 @@ STUDENT_MODEL="gemma-3-4b-it"
 # JUDGE_MODEL="glm-4.5-air"          # LLM-as-judge / critic for evaluation
 
 # --- HuggingFace repo ids (only used by the download stage) -------------------
-STUDENT_REPO="google/gemma-3-4b-it"
+STUDENT_REPO="google/gemma-4-12B-it"
 TEACHER_MODEL="qwen2.5-72b-it-awq"
 PROMPTGEN_MODEL="qwen2.5-14b-it"
 
@@ -64,7 +64,7 @@ WANDB_TOKEN=""
 # Pushes the final full model (~/models/introspection/<student>-<constitution>)
 # to the Hub. Requires `export HF_TOKEN=...` in the repo .env (gitignored).
 HF_ENTITY=sunnyhoward          # your HF account/org, e.g. "sunnyhoward" — REQUIRED if DO_SAVE=1
-HF_MODEL_NAME=gemma-3-4b-it-awakened-big      # target repo name; empty => <student>-<constitution>
+HF_MODEL_NAME=gemma-4-12B-it-awakened-big      # target repo name; empty => <student>-<constitution>
 
 # --- Stage toggles (1 = run, 0 = skip) ----------------------------------------
 # Stages run in this order; each is idempotent (most scripts skip existing output).
